@@ -1,0 +1,6 @@
+To install, simply copy pixelsnap.py and pixelsnap.inx into your inkscape
+extensions directory.
+
+The exact folder may be different on your system, but on mine it's in
+~/.config/inkscape/extensions/
+
