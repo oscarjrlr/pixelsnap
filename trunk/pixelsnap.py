@@ -29,10 +29,27 @@ TODO: This doesn't work very well on paths which have both straight segments
 
 from __future__ import division
 
-import sys, inkex, simplestyle, simpletransform, simplepath
+import sys
 from numpy import matrix
+import simplestyle, simpletransform, simplepath
+
+try:
+    import inkex
+    from inkex import unittouu
+except ImportError:
+    raise ImportError("No module named inkex.\nPlease edit the file %s and see the section titled 'INKEX MODULE'" % __file__)
+
+# INKEX MODULE
+# If you get the "No module named inkex" error, uncomment the relevant line
+# below by removing the '#' at the start of the line.
+#
+#sys.path += ['/usr/share/inkscape/extensions']                     # If you're using a standard Linux installation
+#sys.path += ['/usr/local/share/inkscape/extensions']               # If you're using a custom Linux installation
+#sys.path += ['C:\\Program Files\\Inkscape\\share\\extensions']     # If you're using a standard Windows installation
 
 Precision = 0.00001             # precision for comparing float numbers
+
+MaxGradient = 1/200             # lines that are almost-but-not-quite straight will be snapped, too.
 
 class TransformError(Exception): pass
 
@@ -52,7 +69,7 @@ def invert_transform(transform):
 def transform_point(transform, pt, inverse=False):
     """ Better than simpletransform.applyTransformToPoint,
         a) coz it's a simpler name
-        b) coz it returns xy, rather than modifying it
+        b) coz it returns the new xy, rather than modifying the input
     """
     if inverse:
         transform = invert_transform(transform)
@@ -73,6 +90,19 @@ def transform_dimensions(transform, width=None, height=None, inverse=False):
     if width and height: return width, height
     if width is not None: return width
     if height is not None: return height
+
+
+def vertical(pt1, pt2):
+    hlen = abs(pt1[0] - pt2[0])
+    vlen = abs(pt1[1] - pt2[1])
+    if vlen == 0: return False
+    return (hlen / vlen) < MaxGradient
+
+def horizontal(pt1, pt2):
+    hlen = abs(pt1[0] - pt2[0])
+    vlen = abs(pt1[1] - pt2[1])
+    if hlen == 0: return False
+    return (vlen / hlen) < MaxGradient
 
 class PixelSnapEffect(inkex.Effect):
     def elem_offset(self, elem, parent_transform=None):
@@ -99,11 +129,7 @@ class PixelSnapEffect(inkex.Effect):
             
         stroke_width = 0
         if stroke and setval is None:
-            stroke_width = style['stroke-width'].strip()
-            if stroke_width.endswith('px'):     # We only handle pixel units currently
-                stroke_width = stroke_width[:stroke_width.find('px')]
-            try: stroke_width = float(stroke_width)
-            except ValueError: stroke_width = 0
+            stroke_width = unittouu(style.get('stroke-width', '').strip())
             
         if setval:
             style['stroke-width'] = str(setval)
@@ -206,19 +232,34 @@ class PixelSnapEffect(inkex.Effect):
                 prev_xy = xy
                 continue
             
-            xy_untransformed = xy
+            xy_untransformed = tuple(xy)
             xy = list(transform_point(transform, xy))
             prev_xy = transform_point(transform, prev_xy)
             next_xy = transform_point(transform, next_xy)
             
-            on_horizontal = on_vertical = False
-            if xy[0] == prev_xy[0] or xy[0] == next_xy[0]: on_horizontal = True
-            if xy[1] == prev_xy[1] or xy[1] == next_xy[1]: on_vertical = True
             
+            on_vertical = on_horizontal = False
+            
+            if horizontal(xy, prev_xy):
+                if len(path) > 2 or i==0:
+                    xy[1] = prev_xy[1]                      # make the almost-equal values equal, so they round in the same direction
+                on_horizontal = True
+            if horizontal(xy, next_xy):
+                on_horizontal = True
+            
+            if vertical(xy, prev_xy):                       # as above
+                if len(path) > 2 or i==0:
+                    xy[0] = prev_xy[0]
+                on_vertical = True
+            if vertical(xy, next_xy):
+                on_vertical = True
+
             prev_xy = tuple(xy_untransformed)
             
-            if on_horizontal: xy[0] = round(xy[0] - offset) + offset
-            if on_vertical: xy[1] = round(xy[1] - offset) + offset
+            if on_vertical:
+                xy[0] = round(xy[0] - offset) + offset
+            if on_horizontal:
+                xy[1] = round(xy[1] - offset) + offset
             
             xy = list(transform_point(transform, xy, inverse=True))
             
@@ -238,10 +279,10 @@ class PixelSnapEffect(inkex.Effect):
         
         offset = self.elem_offset(elem, parent_transform)
 
-        width = float(elem.attrib['width'])
-        height = float(elem.attrib['height'])
-        x = float(elem.attrib['x'])
-        y = float(elem.attrib['y'])
+        width = unittouu(elem.attrib['width'])
+        height = unittouu(elem.attrib['height'])
+        x = unittouu(elem.attrib['x'])
+        y = unittouu(elem.attrib['y'])
 
         width, height = transform_dimensions(transform, width, height)
         x, y = transform_point(transform, [x, y])
@@ -290,7 +331,7 @@ class PixelSnapEffect(inkex.Effect):
     def effect(self):
         svg = self.document.getroot()
         
-        self.document_offset = float(svg.attrib['height']) % 1      # although SVG units are absolute, the elements are positioned relative to the top of the page, rather than zero
+        self.document_offset = unittouu(svg.attrib['height']) % 1      # although SVG units are absolute, the elements are positioned relative to the top of the page, rather than zero
 
         for id, elem in self.selected.iteritems():
             try:
