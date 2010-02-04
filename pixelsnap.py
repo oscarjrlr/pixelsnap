@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 
 """
+TODO: This only snaps selected elements, and if those elements are part of a
+    group or layer that has it's own transform, that won't be taken into
+    account, unless you snap the group or layer as a whole. This can account
+    for unexpected results in some cases (eg where you've got a non-integer
+    translation on the layer you're working in, the elements in that layer
+    won't snap properly). The workaround for now is to snap the whole
+    group/layer, or remove the transform on the group/layer.
+    
+    I could fix it in the code by traversing the parent elements up to the
+    document root & calculating the cumulative parent_transform. This could
+    be done at the top of the pixel_snap method if parent_transform==None,
+    or before calling it for the first time.
+
 TODO: Transforming points isn't quite perfect, to say the least. In particular,
     when translating a point bezier curve, we translate the handles by the same amount.
     BUT, some handles that are attached to a particular point are conceptually
@@ -15,7 +28,7 @@ TODO: Transforming points isn't quite perfect, to say the least. In particular,
     In fact, that might be a simpler algorithm anyway -- it avoids having
     to keep track of all the first_xy/next_xy guff.
 
-TODO: This doesn't work very well on paths which have both straight segments
+Note: This doesn't work very well on paths which have both straight segments
       and curved segments.
       The biggest three problems are:
         a) we don't take handles into account (segments where the nodes are
@@ -34,7 +47,7 @@ TODO: This doesn't work very well on paths which have both straight segments
     Some good autohinting concepts that may help:
     http://freetype.sourceforge.net/autohinting/archive/10Mar2000/hinter.html
 
-TODO: Paths that have curves & arcs on some sides of the bounding box won't
+Note: Paths that have curves & arcs on some sides of the bounding box won't
     be snapped correctly on that side of the bounding box, and nor will they
     be translated/resized correctly before the path is modified. Doesn't affect
     most applications of this extension, but it highlights the fact that we
