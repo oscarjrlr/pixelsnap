@@ -5,7 +5,7 @@
 	<param name="title" type="description">Snap all paths in selection to pixels. Snaps borders to half-points and fills to full points</param>
     <effect>
 	<effects-menu>
-		<submenu _name="PixelSnap"/>
+		<submenu _name="Modify Path"/>
 	</effects-menu>
     </effect>
     <script>
