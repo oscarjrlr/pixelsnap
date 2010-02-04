@@ -27,18 +27,26 @@ TODO: This doesn't work very well on paths which have both straight segments
         c) no attempt is made to keep equal widths equal. (or nearly-equal
            widths nearly-equal). For example, font strokes.
         
-    I guess that amounts to the problem that font hinting solves for fonts.
+    I guess that amounts to the problyem that font hinting solves for fonts.
     I wonder if I could find an automatic font-hinting algorithm and munge
     it to my purposes?
     
     Some good autohinting concepts that may help:
     http://freetype.sourceforge.net/autohinting/archive/10Mar2000/hinter.html
 
+TODO: Paths that have curves & arcs on some sides of the bounding box won't
+    be snapped correctly on that side of the bounding box, and nor will they
+    be translated/resized correctly before the path is modified. Doesn't affect
+    most applications of this extension, but it highlights the fact that we
+    take a geometrically simplistic approach to inspecting & modifying the path.
 """
 
 from __future__ import division
 
 import sys
+# *** numpy causes issue #4 on Mac OS 10.6.2. I use it for
+# matrix inverse -- my linear algebra's a bit rusty, but I could implement my
+# own matrix inverse function if necessary, I guess.
 from numpy import matrix
 import simplestyle, simpletransform, simplepath
 
@@ -199,7 +207,7 @@ class PixelSnapEffect(inkex.Effect):
         self.transform(elem, transform)
     
     def transform_path_node(self, transform, path, i):
-        """ Modifies path so that every point is transformed, including handles
+        """ Modifies a segment so that every point is transformed, including handles
         """
         segtype = path[i][0].lower()
         
@@ -209,7 +217,9 @@ class PixelSnapEffect(inkex.Effect):
         elif segtype == 'v':
             path[i][1][0] = transform_point(transform, [0, path[i][1][0]])[1]
         else:
-            for j in range(0, len(path[i][1]), 2):
+            first_coordinate = 0
+            if (segtype == 'a'): first_coordinate = 5           # for elliptical arcs, skip the radius x/y, rotation, large-arc, and sweep
+            for j in range(first_coordinate, len(path[i][1]), 2):
                 x, y = path[i][1][j], path[i][1][j+1]
                 x, y = transform_point(transform, (x, y))
                 path[i][1][j] = x
@@ -217,6 +227,9 @@ class PixelSnapEffect(inkex.Effect):
         
     
     def pathxy(self, path, i, setval=None):
+        """ Return the endpoint of the given path segment.
+            Inspects the segment type to know which elements are the endpoints.
+        """
         segtype = path[i][0].lower()
         x = y = 0
 
@@ -246,6 +259,9 @@ class PixelSnapEffect(inkex.Effect):
             the min/max points will be completely different points)
             
             The returned bounding box includes stroke-width offset.
+            
+            This function uses a simplistic algorithm & doesn't take curves
+            or arcs into account, just node positions.
         """
         # If we have a Live Path Effect, modify original-d. If anyone clamours
         # for it, we could make an option to ignore paths with Live Path Effects
@@ -282,6 +298,12 @@ class PixelSnapEffect(inkex.Effect):
         
         width = max_xy[0] - min_xy[0]
         height = max_xy[1] - min_xy[1]
+
+        # In case somebody tries to snap a 0-high element,
+        # or a curve/arc with all nodes in a line, and of course
+        # because we should always check for divide-by-zero!
+        if (width==0 or height==0): return
+
         rescale = round(width)/width, round(height)/height
 
         min_xy = transform_point(transform, min_xy, inverse=True)
