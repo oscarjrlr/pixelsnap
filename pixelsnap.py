@@ -28,6 +28,10 @@ TODO: Transforming points isn't quite perfect, to say the least. In particular,
     In fact, that might be a simpler algorithm anyway -- it avoids having
     to keep track of all the first_xy/next_xy guff.
 
+TODO: make elem_offset return [x_offset, y_offset] so we can handle non-symetric scaling
+
+------------
+
 Note: This doesn't work very well on paths which have both straight segments
       and curved segments.
       The biggest three problems are:
@@ -146,12 +150,13 @@ class PixelSnapEffect(inkex.Effect):
             bounding-box is offset due to the stroke-width.
             Transform is taken into account.
         """
-        transform = self.transform(elem, parent_transform=parent_transform)
-
-        if abs(abs(transform[0][0]) - abs(transform[1][1])) > (10**-Precision):
-            raise TransformError("Selection contains non-symetric scaling")
-
         stroke_width = self.stroke_width(elem)
+        if stroke_width == 0: return 0                                          # if there's no stroke, no need to worry about the transform
+
+        transform = self.transform(elem, parent_transform=parent_transform)
+        if abs(abs(transform[0][0]) - abs(transform[1][1])) > (10**-Precision):
+            raise TransformError("Selection contains non-symetric scaling")     # *** wouldn't be hard to get around this by calculating vertical_offset & horizontal_offset separately, maybe 2 functions, or maybe returning a tuple
+
         stroke_width = transform_dimensions(transform, width=stroke_width)
 
         return (stroke_width/2)
@@ -176,10 +181,11 @@ class PixelSnapEffect(inkex.Effect):
     def snap_stroke(self, elem, parent_transform=None):
         transform = self.transform(elem, parent_transform=parent_transform)
 
-        if abs(abs(transform[0][0]) - abs(transform[1][1])) > (10**-Precision):
-            raise TransformError("Selection contains non-symetric scaling")
-
         stroke_width = self.stroke_width(elem)
+        if (stroke_width == 0): return                                          # no point raising a TransformError if there's no stroke to snap
+
+        if abs(abs(transform[0][0]) - abs(transform[1][1])) > (10**-Precision):
+            raise TransformError("Selection contains non-symetric scaling, can't snap stroke width")
         
         if stroke_width:
             stroke_width = transform_dimensions(transform, width=stroke_width)
@@ -473,7 +479,10 @@ class PixelSnapEffect(inkex.Effect):
             return
 
         self.snap_transform(elem)
-        self.snap_stroke(elem, parent_transform)
+        try:
+            self.snap_stroke(elem, parent_transform)
+        except TransformError, e:
+            print >>sys.stderr, e
 
         if elemtype(elem, 'path'):
             self.snap_path_scale(elem, parent_transform)
