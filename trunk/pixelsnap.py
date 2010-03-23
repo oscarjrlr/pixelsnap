@@ -61,6 +61,7 @@ Note: Paths that have curves & arcs on some sides of the bounding box won't
 from __future__ import division
 
 import sys
+
 # *** numpy causes issue #4 on Mac OS 10.6.2. I use it for
 # matrix inverse -- my linear algebra's a bit rusty, but I could implement my
 # own matrix inverse function if necessary, I guess.

@@ -1,10 +1,13 @@
 1. To install, simply copy pixelsnap.py and pixelsnap.inx into your inkscape
     extensions directory.
 
-    The exact folder may be different on your system, but on mine it's in
-    ~/.config/inkscape/extensions/
+    The exact folder may be different on your system, but it's likely to be:
+      Linux: ~/.config/inkscape/extensions/
+      Windows: C:\Documents and Settings\<UserName>\Application Data\Inkscape\extensions\
 
-2. To add a keyboard shortcut, edit the file ~/.config/inkscape/keys/default.xml
+2. To add a keyboard shortcut, edit the keybindings file:
+     Linux: ~/.config/inkscape/keys/default.xml
+     Windows: C:\Documents and Settings\<UserName>\Application Data\Inkscape\keys\default.xml
    or create it if it doesn't exist. The complete file should like something like
    below (it may contain other keybindings). To bind PixelSnap to the shortcut
    Shift-X, add the 2 lines between the horizontal rules:
