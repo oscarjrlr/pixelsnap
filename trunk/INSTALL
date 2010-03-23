@@ -20,6 +20,13 @@
     <!-- --------------------------------- -->
    </keys>
 
+3. To run the extension:
+  1. Load up Inksape, and start editing some objects
+  2. Select the objects you want to be pixel-perfect
+  3. Go to the menu Extensions->Modify Path->PixelSnap
+  4. Click "Apply"
+  5. Rinse & repeat for any other objects you want to snap.
+
 
 COMMON PROBLEMS
 
