@@ -1,6 +1,67 @@
 #!/usr/bin/env python
 
 """
+--------------------- LICENSE ---------------------
+Copyright (c) 2009 Bryan Hoyt
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+---------------------------------------------------
+
+
+--------------------- HELP ---------------------
+1. Assuming the extension is properly installed, use it like this:
+  1. Load up Inksape, and start editing some objects
+  2. Select the objects you want to be pixel-perfect
+  3. Go to the menu Extensions->Modify Path->PixelSnap
+  4. Click "Apply"
+  5. Rinse & repeat for any other objects you want to snap.
+
+2. To install, simply copy pixelsnap.py (this file) and pixelsnap.inx into
+    your inkscape extensions directory. However, if you have Inkscape 0.47
+    or more recent, it should already be installed.
+
+    The exact folder may be different on your system, but it's likely to be:
+      Linux: ~/.config/inkscape/extensions/
+      Windows: C:\Documents and Settings\<UserName>\Application Data\Inkscape\extensions\
+
+3. If you use a Mac/MacPorts, and get an error about lxml, it may be the problem
+discussed here on the PixelSnap email discussion group:
+http://groups.google.com/group/pixelsnap-users/browse_thread/thread/ef3d642b5b47876
+
+4. To add a keyboard shortcut, edit the keybindings file:
+     Linux: ~/.config/inkscape/keys/default.xml
+     Windows: C:\Documents and Settings\<UserName>\Application Data\Inkscape\keys\default.xml
+   or create it if it doesn't exist. The complete file should like something like
+   below (it may contain other keybindings). To bind PixelSnap to the shortcut
+   Shift-X, add the 2 lines between the horizontal rules:
+
+   <?xml version="1.0"?>
+   <keys name="Inkscape default">
+    <!-- --------------------------------- -->
+    <bind key="x" modifiers="Shift" action="bryhoyt.pixelsnap" display="true"/>
+    <bind key="X" modifiers="Shift" action="bryhoyt.pixelsnap" />
+    <!-- --------------------------------- -->
+   </keys>
+
+---------------------------------------------------
+
+
 TODO: This only snaps selected elements, and if those elements are part of a
     group or layer that has it's own transform, that won't be taken into
     account, unless you snap the group or layer as a whole. This can account
