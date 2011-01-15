@@ -1,8 +1,20 @@
 <inkscape-extension>
-    <_name>PixelSnap</_name>
-    <id>bryhoyt.pixelsnap</id>
+    <_name>Development PixelSnap</_name>
+    <id>bryhoyt.pixelsnap.development</id>
     <dependency type="executable" location="extensions">pixelsnap.py</dependency>
-    <param name="title" type="description">Snap all paths in selection to pixels. Snaps borders to half-points and fills to full points</param>
+    <param name="title" type="description">Snap selected paths, images, and rectangles to pixel boundaries. Strokes with a non-zero odd width are snapped to midpoints, so they align correctly</param>
+
+
+    <param name="snap_ancestors" type="boolean" _gui-text="Snap unselected ancestors' translations (groups, layers, document height) first">true</param>
+    <param name="ancestor_offset" type="boolean" _gui-text="Calculate offset relative to unselected ancestors' transforms (includes document height offset)">true</param>
+
+    <param name="modify_shapes" _gui-text="" type="optiongroup" appearance="minimal">
+     <_option value="size_and_position">Only move position and resize objects, don't touch paths (least damaging choice, fine for most scenarios)</_option>
+     <_option value="shape">Modify path shapes, size, and position of object (most effective, but can damage intricate paths)</_option>
+    </param>
+
+    <param name="max_gradient" type="float" _gui-text="Maximum slope to consider straight (%)" min="-10000.0" max="10000.0">0.5</param>
+
     <effect>
         <effects-menu>
             <submenu _name="Modify Path"/>
